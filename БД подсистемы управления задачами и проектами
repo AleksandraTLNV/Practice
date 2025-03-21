@@ -1,0 +1,57 @@
+@startuml
+!include <C4/C4_Context>
+!define CRLF \\n
+!define primary_key(x) <b><&key></b> x
+!define foreign_key(x) <b><&key></b> x
+
+title Database Schema for Project and Task System (Crow's Foot Notation)
+
+entity "projects" {
+    primary_key(id) : SERIAL
+    name : VARCHAR(50)
+    description :  VARCHAR(100)
+    status : ENUM ["active", "completed", "archived"]
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+    foreign_key(task_id) : INT REFERENCES tasks(id)
+}
+
+entity "users" {
+    primary_key(id) : SERIAL
+    username : VARCHAR(100) [UNIQUE]
+    email : VARCHAR(255) [UNIQUE]
+    created_at : TIMESTAMP
+}
+
+entity "project_roles" {
+    primary_key(id) : SERIAL
+    foreign_key(project_id) : INT REFERENCES projects(id)
+    foreign_key(user_id) : INT REFERENCES users(id)
+    role :ENUM ["owner", "manager", "member"]
+}
+
+entity "tasks" {
+    primary_key(id) : SERIAL
+    foreign_key(project_id) : INT REFERENCES projects(id)
+    title : VARCHAR(50)
+    description : VARCHAR(100)
+    priority : ENUM ["high", "medium", "low"]
+    status : ENUM ["todo", "in_progress", "done"]
+    due_date : TIMESTAMP
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+entity "task_assignments" {
+    primary_key(id) : SERIAL
+    foreign_key(task_id) : INT REFERENCES tasks(id)
+    foreign_key(user_id) : INT REFERENCES users(id)
+}
+
+projects::id ||--o{ project_roles::project_id : "has"
+users::id ||--o{ project_roles::user_id : "has"
+tasks::id }o--|| projects::task_id : "contains"
+tasks::id ||--o{ task_assignments::task_id : "assigned to"
+users::id ||--o{ task_assignments::user_id : "works on"
+
+@enduml
