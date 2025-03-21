@@ -1,0 +1,52 @@
+@startuml
+autonumber
+
+actor User as "User"
+
+participant "User Web" as Front
+participant "API Gateway" as API_GW
+participant "Authorization Service" as Auth_Service
+database "Authorization DB" as Auth_DB
+
+User -> Front: Вводит логин и пароль
+Front -> Front ++: Обработка ввода
+Front -> API_GW: Отправляет запрос на авторизацию (login)
+Front -- 
+
+API_GW -> API_GW ++: Обработка запроса
+API_GW -> Auth_Service: Пересылает запрос на авторизацию
+API_GW -- 
+
+Auth_Service -> Auth_Service ++: Проверка данных пользователя
+Auth_Service -> Auth_DB: Проверяет учетные данные
+Auth_DB -> Auth_DB ++: Поиск пользователя в БД
+Auth_DB --> Auth_Service: Возвращает результат проверки
+Auth_DB -- 
+
+alt Успешная авторизация
+    Auth_Service -> Auth_Service: Генерация access token
+    Auth_Service -> API_GW: Возвращает access token
+    Auth_Service -- 
+
+    API_GW -> API_GW ++: Обработка ответа
+    API_GW -> Front: Возвращает access token
+    API_GW -- 
+
+    Front -> Front ++: Обновление UI
+    Front -> User: Пользователь авторизован
+    Front -- 
+
+else Ошибка авторизации
+    Auth_Service -> API_GW: Возвращает ошибку (401 Unauthorized)
+    Auth_Service -- 
+
+    API_GW -> API_GW ++: Обработка ошибки
+    API_GW -> Front: Возвращает ошибку
+    API_GW -- 
+
+    Front -> Front ++: Обновление UI
+    Front -> User: Ошибка входа
+    Front -- 
+end
+
+@enduml
