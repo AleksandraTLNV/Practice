@@ -1,0 +1,177 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+
+
+
+
+
+
+
+title C4 Context platforms for online project management and teamwork
+
+
+
+
+Container(user_web_app, "Project Team Member Web Application", "React", "Provides the user interface for project management and collaboration features.", "User UI Web")
+Container(user_mobile_app, "Project Team Member Mobile Application", "React Native", "Provides the user interface for project management and collaboration features on mobile devices.", "User UI Mobile")
+
+
+
+
+Container(admin_web_app, "Project Manager Web Application", "React", "Provides the admin interface for project management and collaboration features.", "User UI Web, Admin UI Web")
+Container(admin_mobile_app, "Project Manager Mobile Application", "React Native", "Provides the admin interface for project management and collaboration features on mobile devices.", "User UI Mobile, Admin UI Mobile")
+
+
+
+
+System_Boundary(platforms, "platforms for online project management and teamwor") {
+  System_Boundary(project_platform, "Project Management & Collaboration Platform", "A platform that allows project managers and team members to effectively collaborate, plan tasks, and track progress.") {
+    Container(api_gateway, "API Gateway", "Nginx", "Central point of entry for all API requests, handling routing.", "Api Gateway")
+    Container(authorization_service, "Authorization Service", "Node.js", "Authenticates and authorizes users.", "Authorization Service")
+    ContainerDb(authorization_db, "Authorization Database", "PostgreSQL", "Stores user, roles, and authorization data.", "DB Authorization")
+
+
+
+
+    Container(user_service, "User Service", "Node.js", "Registration and user profile management.", "User Service")
+    Container(admin_service, "Admin Service", "Node.js", "Registration and management of the admin profile, management of user profiles", "Admin Service")
+    ContainerDb(user_admin_db, "User/Admin Database", "PostgreSQL", "Stores user accounts, profiles, and administrative data.", "DB Users/Admins")
+
+
+
+
+    System_Boundary(project_and_task_system, “Project and Task System”){
+      Container(api_gateway_project_and_task_system, "API Gateway", "Nginx", "Central point of entry for all API requests, handling routing.", "Api Gateway")
+      Container(project_service, "Project Service", "Node.js", "Handles project creation, management, and data.", "project service")
+      Container(task_service, "Task Service", "Node.js", "Manages task creation, assignment, and tracking.", "task service")
+      Container(responsible_management_service, "Responsible Management Service", "Node.js", "Manages assignment and notifications.", "responsible management service")
+      ContainerDb(project_task_db, "Project & Task Database", "PostgreSQL", "Stores project details, tasks, assignments, priorities, and deadlines.", "DB projects tasks users")
+    }
+
+
+
+
+    System_Boundary(communication_system, “Communication System”,"Provides real-time communication features.", "Communication System"){
+      Container(api_gateway_communication_system, "API Gateway", "Nginx", "Central point of entry for all API requests, handling routing.", "Api Gateway")
+      Container(chat_service, "Chat Service", "Node.js", "Manages chat functionality.", "chat service")
+      Container(service_threads, "Service Threads", "Node.js", "Handles service threads.", "service threads")
+      Container(video_service, "Video Service", "Node.js", "Provides video call functionality.", "video service")
+      ContainerDb(communication_metadata_db, "Communication Metadata Database", "MongoDB", "Stores metadata for chats, threads, and video calls.", "DB metadata of communication")
+      ContainerDb(communication_cache_db, "Communication Cache Database", "Redis", "Caches user data and manages notifications for real-time communication.", "DB кэш + работа с уведомлениями")
+    }
+
+
+
+
+    Container(document_service, "Document Service", "Node.js", "Handles document uploads, storage, retrieval, and permissions.", "Document Service")
+    Container(calendar_service, "Calendar Service", "Node.js", "Integrates with external calendar services") 
+    Container(message_queue, "Message Queue", "RabbitMQ", "Handles asynchronous tasks such as sending notifications.", "очередь для обработки уведомлений")
+
+
+
+
+
+
+
+
+    ContainerDb(document_links_db, "Document Links Database", "PostgreSQL", "Stores links and metadata for documents.", "DB Links")
+    ContainerDb(event_db, "Event Database", "PostgreSQL", "Stores event data.", "DB Event")
+  }
+}
+
+
+
+
+System_Boundary(external_system,“External_System”){
+Container_Ext(notification_service, "Notification Service", "Node.js", "Sends notifications to users via email, push notifications, etc.", "Notification Service")
+Container_Ext(object_storage, "Object Storage", "S3", "Stores documents and files.", "S3 (Simple Storage Service)")
+Container_Ext(external_calendars, "External Calendars", "External services such as Google Calendar or Yandex Calendar for calendar integration.")
+}
+
+
+
+
+Rel(user_web_app, api_gateway, "Uses API")
+Rel(user_mobile_app, api_gateway, "Uses API")
+Rel(admin_web_app, api_gateway, "Uses API")
+Rel(admin_mobile_app, api_gateway, "Uses API")
+
+
+
+
+Rel(api_gateway, authorization_service, "Uses API for authorization")
+Rel(api_gateway, user_service, "Routes API requests to")
+Rel(api_gateway, admin_service, "Routes API requests to")
+Rel(api_gateway, api_gateway_project_and_task_system, "Routes API requests to")
+Rel(api_gateway, api_gateway_communication_system, "Routes API requests to")
+Rel(api_gateway, document_service, "Routes API requests to")
+Rel(api_gateway, calendar_service, "Routes API requests to")
+
+
+
+
+
+
+
+
+Rel(authorization_service, authorization_db, "Reads user data for authorization")
+
+
+
+
+Rel(user_service, user_admin_db, "Reads/Writes user data")
+Rel(admin_service, user_admin_db, "Reads/Writes user data")
+
+
+
+
+Rel(document_service, document_links_db,"Reads/Writes document links")
+Rel(document_service, object_storage, "Stores and retrieves documents")
+Rel(document_service, api_gateway_project_and_task_system, "Reads/Writes data")
+
+
+
+
+Rel(calendar_service, event_db, "Reads/Writes events")
+Rel(calendar_service, external_calendars, "Reads/Writes data")
+Rel(calendar_service, message_queue, "Sends notifications about calendar events")
+Rel(calendar_service, api_gateway_project_and_task_system, "Reads/Writes data")
+Rel(calendar_service,  api_gateway_project_and_task_system,"Reads/Writes data")
+
+
+
+
+Rel(api_gateway_project_and_task_system, project_service, "Reads/Writes data")
+Rel(api_gateway_project_and_task_system, task_service, "Reads/Writes data")
+Rel(api_gateway_project_and_task_system, responsible_management_service, "Reads/Writes data")
+Rel(project_service, project_task_db, "Reads/Writes data")
+Rel(task_service, project_task_db, "Reads/Writes data")
+Rel(responsible_management_service, project_task_db, "Reads/Writes data")
+Rel(project_service, message_queue, "Sends notifications about calendar events")
+Rel(task_service, message_queue, "Sends notifications about calendar events")
+
+
+
+
+
+
+
+
+Rel(api_gateway_communication_system, chat_service, "Reads/Writes data")
+Rel(api_gateway_communication_system, service_threads, "Reads/Writes data")
+Rel(api_gateway_communication_system, video_service, "Reads/Writes data")
+Rel(chat_service, communication_metadata_db, "Reads/Writes data")
+Rel(service_threads, communication_metadata_db, "Reads/Writes data")
+Rel(video_service, communication_metadata_db, "Reads/Writes data")
+Rel(chat_service, communication_cache_db, "Reads/Writes data")
+Rel(service_threads, communication_cache_db, "Reads/Writes data")
+Rel(video_service, communication_cache_db, "Reads/Writes data")
+
+
+
+
+Rel(message_queue, notification_service,  "Sends notifications via")
+
+
+@enduml
