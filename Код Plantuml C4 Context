@@ -1,0 +1,47 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+
+title C4 Context platforms for online project management and teamwork
+
+
+Person(user, "Project Team Member", "A user of the project management platform who collaborates on projects, tasks, and communication.")
+Person(project_manager, "Project Manager", "A user who oversees and manages projects, assigns tasks, and tracks progress.")
+
+
+System_Boundary(platforms, "platforms for online project management and teamwor") {
+  System_Boundary(project_platform, "Project Management & Collaboration Platform", "A platform that allows project managers and team members to effectively collaborate, plan tasks, and track progress.") {
+    System(authorization_service, "Authorization Service", "Аутентификация и авторизация пользователей")
+    System(user_service, "User Service", "Registration and user profile management")
+    System(admin_service, "Admin Service", "Registration and management of the admin profile, management of user profiles ")
+    System(document_service, "Document Service", "Загрузка, организация, поиск, просмотр, скачивание, доступ к документам согласно ролей.")
+    System(calendar_service, "Calendar Service", "отображение задач на календаре, календарь проекта, создание событий в календаре, интеграция с внешними календарями")
+    System(project_and_task_system, "Project and Task System", "управление проектами и задачами")
+    System(communication_system, "Communication System", "реализация коммуникаций через чаты, конференции и обсуждения") 
+  }
+}
+
+
+Rel(user, project_platform, "Uses")
+Rel(project_manager, project_platform, "Manages projects and tasks within")
+
+
+System_Ext(email_service, "Email Service", "Sends email notifications related to project updates, task assignments, etc.")
+System_Ext(external_calendars, "External Calendars", "External services such as Google Calendar or Yandex Calendar for calendar integration.")
+System_Ext(S3, "S3(Simple Storage Service)", " Сloud-based document storage platform.")
+
+
+Rel(project_platform, email_service, "Sends notifications via", "SMTP")
+Rel(project_platform, external_calendars, "Integrates with", "API")
+Rel(project_platform, S3, "Integrates with", "API")
+
+
+UpdateElementStyle(platforms, $bgColor="Green")
+UpdateElementStyle(project_platform, $bgColor="Green")
+UpdateElementStyle(email_service, $bgColor="SkyBlue")
+UpdateElementStyle(external_calendars, $bgColor="SkyBlue")
+UpdateRelStyle(email_service, $textColor="SkyBlue")
+UpdateRelStyle(calendar_service, $textColor="SkyBlue")
+
+
+@enduml
