@@ -1,0 +1,51 @@
+@startuml 
+autonumber
+
+actor User as "User"
+
+participant "User Web" as Front
+participant "API Gateway" as API_GW
+participant "API Gateway (Project & Task System)" as API_GW_Project
+participant "Task Service" as Task_Service
+database "Task Database" as Task_DB
+
+User -> Front: Ввод данных новой задачи
+Front -> Front: Валидация введенных данных
+
+alt Данные прошли валидацию на Frontend  
+    Front -> API_GW: Отправка запроса на создание задачи
+    API_GW -> API_GW_Project ++: Перенаправление запроса в подсистему
+    API_GW -- 
+
+    API_GW_Project -> Task_Service ++: Передача запроса на создание задачи
+    Task_Service -> Task_Service ++: Проверка пользователя и данных
+
+    alt Пользователь имеет права на создание задачи
+        Task_Service -> Task_DB ++: Сохранение новой задачи
+        Task_DB --> Task_Service: Подтверждение сохранения
+        Task_DB -- 
+
+        Task_Service -> API_GW_Project: Возвращает подтверждение
+        Task_Service -- 
+
+        API_GW_Project -> API_GW: Возвращает подтверждение
+        API_GW_Project -- 
+
+        API_GW -> Front: Подтверждение создания задачи
+        API_GW -- 
+
+        Front -> User ++: Уведомление о создании задачи
+        Front --  
+    else Пользователь не имеет прав на создание задачи
+        Task_Service --> API_GW_Project: Ошибка 403 (Forbidden)
+        API_GW_Project --> API_GW: Ошибка 403 (Forbidden)
+        API_GW --> Front: Показ сообщения "У вас нет прав на создание задач в этом проекте"
+        Task_Service -- 
+        API_GW_Project --  
+    end 
+
+else Ошибка валидации данных на Frontend  
+    Front -> Front: Показ сообщения об ошибке
+end
+
+@enduml
